@@ -945,6 +945,191 @@
 
     <!-- Portfolio API Integration -->
     <script src="assets/js/portfolio-api.js"></script>
+    
+    <script>
+        // Initialize portfolio gallery page with shop sidebar functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing Portfolio Gallery (Shop Sidebar)...');
+            
+            // Initialize portfolio with category filtering from sidebar
+            initializePortfolioGallery();
+            
+            // Setup category filter functionality for the left sidebar
+            setupSidebarCategoryFilters();
+        });
+        
+        // Initialize portfolio gallery functionality
+        async function initializePortfolioGallery() {
+            try {
+                // Load and display all products
+                await loadAndDisplayProducts();
+                
+                // Load and setup categories
+                await loadAndDisplayCategories();
+                
+            } catch (error) {
+                console.error('Error initializing portfolio gallery:', error);
+                showErrorMessage('Failed to load portfolio. Please try again later.');
+            }
+        }
+        
+        // Load and display products
+        async function loadAndDisplayProducts(category = null) {
+            const container = document.getElementById('portfolio-products-container');
+            const noProductsMsg = document.getElementById('no-products-message');
+            const productCount = document.getElementById('product-count');
+            
+            if (!container) return;
+            
+            try {
+                // Show loading state
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading products...</span>
+                        </div>
+                        <p class="mt-3">Loading portfolio items...</p>
+                    </div>
+                `;
+                
+                // Load products from API
+                const products = await loadProducts(category);
+                
+                // Hide no products message
+                if (noProductsMsg) {
+                    noProductsMsg.style.display = 'none';
+                }
+                
+                if (products.length === 0) {
+                    // Show no products message
+                    container.innerHTML = '';
+                    if (noProductsMsg) {
+                        noProductsMsg.style.display = 'block';
+                    }
+                    if (productCount) {
+                        productCount.textContent = 'No products found.';
+                    }
+                    return;
+                }
+                
+                // Update product count
+                if (productCount) {
+                    productCount.textContent = `Showing ${products.length} portfolio items.`;
+                }
+                
+                // Render products
+                renderPortfolioProducts(products, container);
+                
+            } catch (error) {
+                console.error('Error loading products:', error);
+                showErrorMessage('Failed to load products. Please try again.');
+            }
+        }
+        
+        // Render products for portfolio gallery (no pricing, wishlist, cart buttons)
+        function renderPortfolioProducts(products, container) {
+            const productsHTML = products.map(product => `
+                <div class="col-lg-4 col-md-6 col-sm-6 col-xs-6" data-aos="fade-up" data-aos-delay="200">
+                    <!-- Single Product -->
+                    <div class="product mb-25px">
+                        <div class="thumb">
+                            <a href="single-product.html?id=${product.id}" class="image">
+                                <img src="${product.image_url || 'assets/images/product-image/default.jpg'}" alt="${product.name}" />
+                                ${product.image_url_2 ? `<img class="hover-image" src="${product.image_url_2}" alt="${product.name}" />` : ''}
+                            </a>
+                            ${product.status === 'featured' ? '<span class="badges"><span class="new">Featured</span></span>' : ''}
+                            <div class="actions">
+                                <a href="single-product.html?id=${product.id}" class="action quickview" title="View Details">
+                                    <i class="icon-size-fullscreen"></i>
+                                </a>
+                            </div>
+                            <a href="single-product.html?id=${product.id}" class="add-to-cart-btn" style="background: #333; color: white; border: none; padding: 10px 20px; text-decoration: none; display: block; text-align: center;">
+                                View Details
+                            </a>
+                        </div>
+                        <div class="content">
+                            <h5 class="title">
+                                <a href="single-product.html?id=${product.id}">${product.name}</a>
+                            </h5>
+                            <p class="category-name" style="color: #666; font-size: 14px; margin-top: 5px;">
+                                ${product.category}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = productsHTML;
+        }
+        
+        // Load and display categories in sidebar
+        async function loadAndDisplayCategories() {
+            try {
+                const categories = await loadCategories();
+                const categoryList = document.getElementById('category-filter-list');
+                
+                if (!categoryList || categories.length === 0) return;
+                
+                // Keep the "All" option and add dynamic categories
+                const allOption = categoryList.querySelector('[data-category="all"]').parentElement;
+                categoryList.innerHTML = '';
+                categoryList.appendChild(allOption);
+                
+                // Add dynamic categories
+                categories.forEach(category => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="#" class="category-filter-btn" data-category="${category}">${category}</a>`;
+                    categoryList.appendChild(li);
+                });
+                
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+        
+        // Setup sidebar category filter functionality
+        function setupSidebarCategoryFilters() {
+            const categoryList = document.getElementById('category-filter-list');
+            
+            if (!categoryList) return;
+            
+            categoryList.addEventListener('click', async function(e) {
+                e.preventDefault();
+                
+                if (e.target.classList.contains('category-filter-btn')) {
+                    // Remove active class from all buttons
+                    categoryList.querySelectorAll('.category-filter-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    
+                    // Add active class to clicked button
+                    e.target.classList.add('selected');
+                    
+                    // Get selected category
+                    const category = e.target.getAttribute('data-category');
+                    const filterCategory = category === 'all' ? null : category;
+                    
+                    // Load and display filtered products
+                    await loadAndDisplayProducts(filterCategory);
+                }
+            });
+        }
+        
+        // Show error message
+        function showErrorMessage(message) {
+            const container = document.getElementById('portfolio-products-container');
+            if (container) {
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <div class="alert alert-danger" role="alert">
+                            <h4>Error</h4>
+                            <p>${message}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    </script>
 </body>
 
 </html>
