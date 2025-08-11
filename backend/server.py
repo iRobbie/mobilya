@@ -19,15 +19,16 @@ from models import Product, Category, Blog, Image, ProductCreate, CategoryCreate
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Create FastAPI app
 app = FastAPI(title="Furns Portfolio API", version="1.0.0", description="API for Furns Product Showcase")
 
-# CORS middleware
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"]
 )
 
 # MongoDB connection
@@ -48,7 +49,7 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 # Serve static files
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
-# Simple authentication (in production, use proper JWT with user management)
+# Simple authentication
 security = HTTPBearer()
 API_SECRET = os.environ.get('API_SECRET', 'furns-admin-secret-2024')
 
